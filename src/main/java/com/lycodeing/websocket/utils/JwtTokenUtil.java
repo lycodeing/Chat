@@ -3,6 +3,7 @@ package com.lycodeing.websocket.utils;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.Base64;
@@ -14,6 +15,7 @@ import java.util.Map;
  * @author xiaotianyu
  */
 @Component
+@Slf4j
 public class JwtTokenUtil {
     private static final String SECRET_KEY = "websocket-lycodeing-secret";
 
@@ -42,7 +44,7 @@ public class JwtTokenUtil {
             Jwts.parser().setSigningKey(SECRET_KEY).parseClaimsJws(token);
             return true;
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("validateToken error",e);
             return false;
         }
     }
