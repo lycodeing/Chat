@@ -11,8 +11,15 @@ import org.springframework.messaging.support.ChannelInterceptor;
 import java.util.Objects;
 import java.util.UUID;
 
+/**
+ * @author xiaotianyu
+ */
 @Slf4j
 public class JwtHandshakeInterceptor implements ChannelInterceptor {
+    /**
+     * 认证Token header_key
+     */
+    private static final String HEADER_TOKEN_KEY = "Authorization";
     private final JwtTokenUtil jwtTokenUtil;
 
     public JwtHandshakeInterceptor(JwtTokenUtil jwtTokenUtil) {
@@ -24,7 +31,7 @@ public class JwtHandshakeInterceptor implements ChannelInterceptor {
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
         // 获取Token信息
-        String authorization = accessor.getFirstNativeHeader("Authorization");
+        String authorization = accessor.getFirstNativeHeader(HEADER_TOKEN_KEY);
         String username = null;
         if (Objects.nonNull(accessor.getCommand())) {
             switch (accessor.getCommand()) {
