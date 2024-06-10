@@ -1,20 +1,23 @@
 package com.lycodeing.websocket.interceptor;
 
 import com.lycodeing.websocket.exceptions.TokenValidationException;
+import com.lycodeing.websocket.service.GroupUserService;
 import com.lycodeing.websocket.utils.JwtTokenUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
+import org.springframework.stereotype.Component;
 
 import java.util.Objects;
-import java.util.UUID;
 
 /**
  * @author xiaotianyu
  */
 @Slf4j
+@Component
 public class JwtHandshakeInterceptor implements ChannelInterceptor {
     /**
      * 认证Token header_key
@@ -22,8 +25,12 @@ public class JwtHandshakeInterceptor implements ChannelInterceptor {
     private static final String HEADER_TOKEN_KEY = "Authorization";
     private final JwtTokenUtil jwtTokenUtil;
 
-    public JwtHandshakeInterceptor(JwtTokenUtil jwtTokenUtil) {
+    private final GroupUserService groupUserService;
+
+    @Autowired
+    public JwtHandshakeInterceptor(JwtTokenUtil jwtTokenUtil, GroupUserService groupUserService) {
         this.jwtTokenUtil = jwtTokenUtil;
+        this.groupUserService = groupUserService;
     }
 
 
@@ -41,7 +48,7 @@ public class JwtHandshakeInterceptor implements ChannelInterceptor {
                 }
                 case SUBSCRIBE -> {
                     username = validateJwtToken(authorization);
-                    if (!isGroupMember(username, accessor.getDestination())) {
+                    if (!groupUserService.isGroupMember(username, accessor.getDestination())) {
                         throw new RuntimeException("用户不是群成员,禁止订阅");
                     }
                     log.info("用户：{},订阅消息,通道：{}", username, accessor.getDestination());
@@ -55,13 +62,6 @@ public class JwtHandshakeInterceptor implements ChannelInterceptor {
 
 
         return message;
-    }
-
-
-    private boolean isGroupMember(String username,String destination) {
-        // 在这里实现验证用户是否是群成员的逻辑
-        // 可以从数据库或其他存储中获取群成员信息进行验证
-        return true; // 假设所有用户都是群成员，实际应根据具体逻辑来判断
     }
 
 
