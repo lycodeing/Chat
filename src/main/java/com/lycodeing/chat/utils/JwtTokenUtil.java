@@ -18,9 +18,10 @@ import java.util.Map;
 public class JwtTokenUtil {
     private static final String SECRET_KEY = "websocket-lycodeing-secret";
 
-    public String generateToken(String username) {
+    public static String generateToken(String username, String userId) {
         Map<String, Object> claims = new HashMap<>(1);
         claims.put("username", username);
+        claims.put("userId", userId);
         return Jwts.builder()
                 .setSubject(username)
                 .setClaims(claims)
@@ -30,15 +31,24 @@ public class JwtTokenUtil {
                 .compact();
     }
 
-    public String getUsernameFromToken(String token) {
-        Claims claims = Jwts.parser()
+    public static String getUsernameFromToken(String token) {
+        Claims claims = getClaims(token);
+        return claims.get("username", String.class);
+    }
+
+    public static String getUserIdFromToken(String token) {
+        Claims claims = getClaims(token);
+        return claims.get("userId", String.class);
+    }
+
+    private static Claims getClaims(String token) {
+        return Jwts.parser()
                 .setSigningKey(SECRET_KEY)
                 .parseClaimsJws(token)
                 .getBody();
-        return claims.get("username",String.class);
     }
 
-    public boolean validateToken(String token) {
+    public static boolean validateToken(String token) {
         try {
             Jwts.parser().setSigningKey(SECRET_KEY).parseClaimsJws(token);
             return true;

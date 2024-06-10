@@ -40,6 +40,13 @@ public class Result implements Serializable {
         return result;
     }
 
+    public static Result failure(String msg) {
+        Result result = new Result();
+        result.setCode(BUSINESS_ERROR);
+        result.setMsg(msg);
+        return result;
+    }
+
     public static Result error(String msg) {
         Result result = new Result();
         result.setCode(ERROR);

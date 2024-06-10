@@ -1,5 +1,7 @@
 package com.lycodeing.chat.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.lycodeing.chat.domain.User;
 import com.lycodeing.chat.service.UserService;
@@ -15,6 +17,12 @@ import org.springframework.stereotype.Service;
 public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     implements UserService{
 
+    @Override
+    public User getUserByUsername(String username) {
+        LambdaQueryWrapper<User> lambdaQuery = Wrappers.lambdaQuery(User.class);
+        lambdaQuery.eq(User::getUserName, username);
+        return baseMapper.selectOne(lambdaQuery);
+    }
 }
 
 

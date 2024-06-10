@@ -10,7 +10,6 @@ import org.apache.ibatis.annotations.Mapper;
 * @createDate 2024-06-10 14:55:58
 * @Entity com.lycodeing.websocket.domain.UserRelation
 */
-@Mapper
 public interface UserRelationMapper extends BaseMapper<UserRelation> {
 
 }
