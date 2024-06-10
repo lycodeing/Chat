@@ -1,31 +1,46 @@
 package com.lycodeing.websocket.controller;
 
-import com.lycodeing.websocket.vo.ChatMessage;
+import com.lycodeing.websocket.dto.GroupMsgDTO;
+import com.lycodeing.websocket.dto.PrivateMsgDTO;
+import com.lycodeing.websocket.service.ChatService;
+import com.lycodeing.websocket.request.ChatMessageRequest;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * @author xiaotianyu
+ */
 @RestController
 public class ChatController {
 
+    private final ChatService chatService;
+
+    public ChatController(ChatService chatService) {
+        this.chatService = chatService;
+    }
 
     @MessageMapping("/chat.sendPrivateMessage")
-    @SendTo("/topic/public")
-    public ChatMessage sendPrivateMessage(ChatMessage chatMessage, SimpMessageHeaderAccessor headerAccessor) {
-        String username = (String) headerAccessor.getSessionAttributes().get("username");
-        chatMessage.setSender(username);
-        chatMessage.setSender("server");
-        return chatMessage;
+    public void sendPrivateMessage(ChatMessageRequest chatMessage) {
+        PrivateMsgDTO privateMsgDTO = PrivateMsgDTO.builder()
+                .msg(chatMessage.getMsg())
+                .senderId(chatMessage.getSender())
+                .receiverId(chatMessage.getReceiver())
+                .msgType(chatMessage.getMsgType())
+                .build();
+        chatService.sendPrivateMsg(privateMsgDTO);
     }
 
 
     @MessageMapping("/chat.sendGroupMessage")
-    @SendTo("/topic/public")
-    public ChatMessage sendGroupMessage(ChatMessage chatMessage, SimpMessageHeaderAccessor headerAccessor) {
-        String username = (String) headerAccessor.getSessionAttributes().get("username");
-        chatMessage.setSender(username);
-        chatMessage.setSender("server");
-        return chatMessage;
+    public void sendGroupMessage(ChatMessageRequest chatMessage) {
+        GroupMsgDTO groupMsgDTO = GroupMsgDTO.builder()
+                .msg(chatMessage.getMsg())
+                .senderId(chatMessage.getSender())
+                .groupId(chatMessage.getReceiver())
+                .msgType(chatMessage.getMsgType())
+                .build();
+        chatService.sendGroupMsg(groupMsgDTO);
     }
 }
