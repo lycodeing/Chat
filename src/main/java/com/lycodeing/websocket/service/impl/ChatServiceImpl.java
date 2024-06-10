@@ -1,14 +1,16 @@
 package com.lycodeing.websocket.service.impl;
 
-import com.lycodeing.websocket.dto.MsgDTO;
-import com.lycodeing.websocket.dto.MsgRequestDTO;
-import static com.lycodeing.websocket.dto.MsgDTO.Sender;
-import static com.lycodeing.websocket.dto.MsgDTO.Receiver;
+import static com.lycodeing.websocket.dto.GroupMsgDTO.Sender;
 
-import com.lycodeing.websocket.enums.MsgTypeEnum;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.lycodeing.websocket.domain.GroupUser;
+import com.lycodeing.websocket.domain.User;
+import com.lycodeing.websocket.dto.GroupMsgDTO;
+import com.lycodeing.websocket.dto.PrivateMsgDTO;
+import com.lycodeing.websocket.dto.ServiceMsgDTO;
 import com.lycodeing.websocket.enums.SubscribeTypeEnum;
-import com.lycodeing.websocket.service.ChatService;
-import com.lycodeing.websocket.service.UserService;
+import com.lycodeing.websocket.service.*;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
@@ -19,51 +21,50 @@ import org.springframework.stereotype.Service;
 @Service
 public class ChatServiceImpl implements ChatService {
 
-    private final SimpMessagingTemplate smtpTemplate;;
+    private final SimpMessagingTemplate smtpTemplate;
+    ;
 
     private final UserService userService;
 
 
+    private final GroupUserService groupUserService;
+
     @Autowired
     public ChatServiceImpl(SimpMessagingTemplate smtpTemplate,
-                           UserService userService) {
+                           UserService userService, GroupUserService groupUserService) {
         this.smtpTemplate = smtpTemplate;
         this.userService = userService;
+        this.groupUserService = groupUserService;
     }
 
     @Override
-    public void sendGroupMsg(MsgRequestDTO msg) {
-        String destination = String.format(SubscribeTypeEnum.GROUP.getUrl(), msg.getReceiver());
-        MsgDTO msgDTO = getMsgDTO(msg);
-        smtpTemplate.convertAndSend(destination,msgDTO);
+    public void sendGroupMsg(GroupMsgDTO msg) {
+        String destination = String.format(SubscribeTypeEnum.GROUP.getUrl(), msg.getGroupId());
+        User user = userService.getById(msg.getSenderId());
+        GroupUser groupUser = groupUserService.getOne(Wrappers.lambdaQuery(GroupUser.class)
+                .eq(GroupUser::getGroupId, msg.getGroupId())
+                .eq(GroupUser::getUserId, user.getId())
+        );
+        // 设置发送人信息
+        msg.setSender(Sender.builder()
+                .senderId(user.getId())
+                .avatar(user.getAvatarUrl())
+                .nickName(StringUtils.isNotBlank(groupUser.getNickName()) ? groupUser.getNickName() : groupUser.getSourceName())
+                .build());
+        smtpTemplate.convertAndSend(destination, msg);
     }
-
 
 
     @Override
-    public void sendPrivateMsg(MsgRequestDTO msg) {
-        String destination = String.format(SubscribeTypeEnum.PRIVATE.getUrl(), msg.getReceiver());
-        MsgDTO msgDTO = getMsgDTO(msg);
-        smtpTemplate.convertAndSend(destination,msgDTO);
+    public void sendPrivateMsg(PrivateMsgDTO msg) {
+        String destination = String.format(SubscribeTypeEnum.PRIVATE.getUrl(), msg.getReceiverId());
+        smtpTemplate.convertAndSend(destination, msg);
     }
 
     @Override
-    public void sendServiceMsg(MsgRequestDTO msg) {
-        String destination = String.format(SubscribeTypeEnum.SERVICE.getUrl(), msg.getReceiver());
-        MsgDTO msgDTO = getMsgDTO(msg);
-        smtpTemplate.convertAndSend(destination,msgDTO);
+    public void sendServiceMsg(ServiceMsgDTO msg) {
+        String destination = String.format(SubscribeTypeEnum.SERVICE.getUrl(), msg.getServiceId());
+        smtpTemplate.convertAndSend(destination, msg);
     }
 
-
-    private  MsgDTO getMsgDTO(MsgRequestDTO msg) {
-        String sender = userService.getUserById(msg.getSender());
-        String receiver = userService.getUserById(msg.getReceiver());
-        return MsgDTO.builder()
-                .msg(msg.getMsg())
-                .msgType(msg.getMsgType())
-                .sender(Sender.builder().build())
-                .receiver(Receiver.builder().build())
-                .sendTime(System.currentTimeMillis())
-                .build();
-    }
 }

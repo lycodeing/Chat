@@ -10,17 +10,22 @@ import org.springframework.web.bind.annotation.RestController;
 public class ChatController {
 
 
-    @MessageMapping("/chat.sendMessage")
+    @MessageMapping("/chat.sendPrivateMessage")
     @SendTo("/topic/public")
-    public ChatMessage sendMessage(ChatMessage chatMessage, SimpMessageHeaderAccessor headerAccessor) {
+    public ChatMessage sendPrivateMessage(ChatMessage chatMessage, SimpMessageHeaderAccessor headerAccessor) {
         String username = (String) headerAccessor.getSessionAttributes().get("username");
         chatMessage.setSender(username);
         chatMessage.setSender("server");
         return chatMessage;
     }
 
-    @MessageMapping("/chat.addUser")
-    public void addUser(SimpMessageHeaderAccessor headerAccessor, String token) {
-        // 不需要在这里验证token，因为已经在握手拦截器中验证过
+
+    @MessageMapping("/chat.sendGroupMessage")
+    @SendTo("/topic/public")
+    public ChatMessage sendGroupMessage(ChatMessage chatMessage, SimpMessageHeaderAccessor headerAccessor) {
+        String username = (String) headerAccessor.getSessionAttributes().get("username");
+        chatMessage.setSender(username);
+        chatMessage.setSender("server");
+        return chatMessage;
     }
 }
