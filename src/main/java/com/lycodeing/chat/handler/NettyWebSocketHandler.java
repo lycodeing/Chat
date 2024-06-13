@@ -15,6 +15,7 @@ public class NettyWebSocketHandler extends SimpleChannelInboundHandler<TextWebSo
     @Override
     protected void channelRead0(ChannelHandlerContext channelHandlerContext, TextWebSocketFrame textWebSocketFrame) throws Exception {
         log.info("receive message:{}", textWebSocketFrame.text());
+        channelHandlerContext.channel().writeAndFlush(new TextWebSocketFrame("server receive message: " + textWebSocketFrame.text()));
     }
 
     @Override
