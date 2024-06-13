@@ -16,3 +16,14 @@ mybatis-plus:
   configuration:
     # 开启自动驼峰命名规则映射
     map-underscore-to-camel-case: true
+
+
+netty:
+  # 端口
+  port: 9000
+  # 最大内容长度
+  maxContentLength: 65536
+  # websocket路径
+  websocketPath: /chat
+  # 心跳超时时间
+  idleTimeout: 60
