@@ -4,7 +4,7 @@ import com.lycodeing.chat.dto.GroupMsgDTO;
 import com.lycodeing.chat.dto.PrivateMsgDTO;
 import com.lycodeing.chat.service.ChatService;
 import com.lycodeing.chat.request.ChatMessageRequest;
-import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -19,7 +19,7 @@ public class ChatController {
         this.chatService = chatService;
     }
 
-    @MessageMapping("/chat.sendPrivateMessage")
+    @PostMapping("/sendPrivateMessage")
     public void sendPrivateMessage(ChatMessageRequest chatMessage) {
         PrivateMsgDTO privateMsgDTO = PrivateMsgDTO.builder()
                 .msg(chatMessage.getMsg())
@@ -31,7 +31,7 @@ public class ChatController {
     }
 
 
-    @MessageMapping("/chat.sendGroupMessage")
+    @PostMapping("/sendGroupMessage")
     public void sendGroupMessage(ChatMessageRequest chatMessage) {
         GroupMsgDTO groupMsgDTO = GroupMsgDTO.builder()
                 .msg(chatMessage.getMsg())
