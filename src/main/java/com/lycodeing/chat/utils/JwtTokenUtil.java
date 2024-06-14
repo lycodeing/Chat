@@ -18,6 +18,15 @@ import java.util.Map;
 public class JwtTokenUtil {
     private static final String SECRET_KEY = "websocket-lycodeing-secret";
 
+    /**
+     * TODO 等待优化 引入redis控制状态
+     * TODO 建议 redis储存 AuthenticatedUser
+     * TODO token中记录userId
+     *
+     * @param username
+     * @param userId
+     * @return
+     */
     public static String generateToken(String username, String userId) {
         Map<String, Object> claims = new HashMap<>(1);
         claims.put("username", username);

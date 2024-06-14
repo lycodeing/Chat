@@ -51,7 +51,14 @@ public class NettyAuthHandler extends ChannelInboundHandlerAdapter {
         NettyServiceContext.removeChannel(ctx.channel());
     }
 
-
+    /**
+     * 验证JWT令牌
+     * 可引入redis控制 并读取redis储存的用户信息
+     * 并写入 AuthenticatedUserContext 中
+     *
+     * @param authorization 令牌
+     * @return
+     */
     public String validateJwtToken(String authorization) {
         // 增加对authorization的初步校验
         if (authorization == null || authorization.trim().isEmpty()) {

@@ -1,4 +1,4 @@
-package com.lycodeing.chat.request;
+package com.lycodeing.chat.dto.request;
 
 import lombok.Data;
 

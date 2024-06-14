@@ -3,7 +3,7 @@ package com.lycodeing.chat.controller;
 import com.lycodeing.chat.dto.GroupMsgDTO;
 import com.lycodeing.chat.dto.PrivateMsgDTO;
 import com.lycodeing.chat.service.ChatService;
-import com.lycodeing.chat.request.ChatMessageRequest;
+import com.lycodeing.chat.dto.request.ChatMessageRequest;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
