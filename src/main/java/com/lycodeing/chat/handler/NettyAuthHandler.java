@@ -2,7 +2,8 @@ package com.lycodeing.chat.handler;
 
 import com.lycodeing.chat.config.NettyServiceContext;
 import com.lycodeing.chat.exceptions.TokenValidationException;
-import com.lycodeing.chat.utils.JwtTokenUtil;
+import com.lycodeing.chat.security.AuthenticatedUser;
+import com.lycodeing.chat.security.TokenService;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.http.FullHttpRequest;
@@ -20,6 +21,11 @@ public class NettyAuthHandler extends ChannelInboundHandlerAdapter {
      */
     private static final String AUTHORIZATION_KEY = "Authorization";
 
+    private final TokenService tokenService;
+
+    public NettyAuthHandler(TokenService tokenService) {
+        this.tokenService = tokenService;
+    }
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
@@ -29,8 +35,8 @@ public class NettyAuthHandler extends ChannelInboundHandlerAdapter {
                 log.info("authorization is null, channel close");
                 ctx.close();
             }
-            String userId = validateJwtToken(authorization);
-            NettyServiceContext.addChannel(userId, ctx.channel());
+            AuthenticatedUser authenticatedUser = validateJwtToken(authorization);
+            NettyServiceContext.addChannel(authenticatedUser.getUserId(), ctx.channel());
             super.channelRead(ctx, msg);
         } else {
             super.channelRead(ctx, msg);
@@ -59,7 +65,7 @@ public class NettyAuthHandler extends ChannelInboundHandlerAdapter {
      * @param authorization 令牌
      * @return
      */
-    public String validateJwtToken(String authorization) {
+    public AuthenticatedUser validateJwtToken(String authorization) {
         // 增加对authorization的初步校验
         if (authorization == null || authorization.trim().isEmpty()) {
             throw new TokenValidationException("Authorization header is missing or empty.");
@@ -72,9 +78,9 @@ public class NettyAuthHandler extends ChannelInboundHandlerAdapter {
         String token = authorization.replace("Bearer ", "").trim();
 
         // 使用jwtTokenUtil验证token的合法性
-        if (!JwtTokenUtil.validateToken(token)) {
+        if (tokenService.validateToken(token)) {
             throw new TokenValidationException("Token validation failed.");
         }
-        return JwtTokenUtil.getUserIdFromToken(token);
+        return tokenService.getAuthenticatedUser(token);
     }
 }

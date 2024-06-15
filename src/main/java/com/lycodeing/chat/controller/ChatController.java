@@ -2,6 +2,8 @@ package com.lycodeing.chat.controller;
 
 import com.lycodeing.chat.dto.GroupMsgDTO;
 import com.lycodeing.chat.dto.PrivateMsgDTO;
+import com.lycodeing.chat.security.AuthenticatedUser;
+import com.lycodeing.chat.security.AuthenticatedUserContext;
 import com.lycodeing.chat.service.ChatService;
 import com.lycodeing.chat.dto.request.ChatMessageRequest;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -21,9 +23,11 @@ public class ChatController {
 
     @PostMapping("/sendPrivateMessage")
     public void sendPrivateMessage(ChatMessageRequest chatMessage) {
+        // 获取当前登录的用户ID
+        AuthenticatedUser authenticatedUser = AuthenticatedUserContext.get();
         PrivateMsgDTO privateMsgDTO = PrivateMsgDTO.builder()
                 .msg(chatMessage.getMsg())
-                .senderId(chatMessage.getSender())
+                .senderId(authenticatedUser.getUserId())
                 .receiverId(chatMessage.getReceiver())
                 .msgType(chatMessage.getMsgType())
                 .build();

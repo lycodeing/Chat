@@ -4,16 +4,15 @@ import com.lycodeing.chat.common.Result;
 import com.lycodeing.chat.constants.SecurityConstant;
 import com.lycodeing.chat.security.AuthenticatedUser;
 import com.lycodeing.chat.security.AuthenticatedUserContext;
+import com.lycodeing.chat.security.TokenService;
 import com.lycodeing.chat.security.properties.SecurityProperties;
 import com.lycodeing.chat.utils.GsonUtil;
-import com.lycodeing.chat.utils.JwtTokenUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.NonNull;
-import org.springframework.lang.NonNullApi;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
@@ -30,9 +29,13 @@ public class SecurityInterceptor implements HandlerInterceptor {
 
     private final SecurityProperties securityProperties;
 
+    private final TokenService tokenService;
+
     @Autowired
-    public SecurityInterceptor(SecurityProperties securityProperties) {
+    public SecurityInterceptor(SecurityProperties securityProperties,
+                               TokenService tokenService) {
         this.securityProperties = securityProperties;
+        this.tokenService = tokenService;
     }
 
     @Override
@@ -52,14 +55,14 @@ public class SecurityInterceptor implements HandlerInterceptor {
 
         try {
             // 验证Token有效性
-            if (!JwtTokenUtil.validateToken(token)) {
+            if (!tokenService.validateToken(token)) {
                 log.warn("Token validation failed.");
                 handleUnauthorized(response, "Token验证失败");
                 return false;
             }
 
             // 提取并设置用户信息到上下文
-            AuthenticatedUser authenticatedUser = JwtTokenUtil.getAuthenticatedUserFromToken(token);
+            AuthenticatedUser authenticatedUser = tokenService.getAuthenticatedUser(token);
             AuthenticatedUserContext.set(authenticatedUser);
             return true;
         } catch (SecurityException se) {
