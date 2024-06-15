@@ -27,3 +27,9 @@ netty:
   websocketPath: /chat
   # 心跳超时时间
   idleTimeout: 60
+security:
+  white-list:
+    - /chat/login
+    - /chat/register
+    - /chat/logout
+    - /chat/heartbeat

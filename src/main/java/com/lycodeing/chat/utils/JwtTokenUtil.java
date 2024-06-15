@@ -1,5 +1,6 @@
 package com.lycodeing.chat.utils;
 
+import com.lycodeing.chat.security.AuthenticatedUser;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -44,6 +45,17 @@ public class JwtTokenUtil {
         Claims claims = getClaims(token);
         return claims.get("username", String.class);
     }
+
+    public static AuthenticatedUser getAuthenticatedUserFromToken(String token) {
+        Claims claims = getClaims(token);
+        String s = claims.get("userId", String.class);
+        // TODO 读取redis中的AuthenticatedUser进行返回
+        return AuthenticatedUser.builder()
+                .username(claims.get("username", String.class))
+                .userId(claims.get("userId", String.class))
+                .build();
+    }
+
 
     public static String getUserIdFromToken(String token) {
         Claims claims = getClaims(token);
