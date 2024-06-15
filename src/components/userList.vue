@@ -41,28 +41,4 @@ export default defineComponent({
   box-shadow: 0 0 2px 2px #212121;
   border-radius: 4px;
 }
-
-.chat_item:hover::before {
-  content: '';
-  width: 100%;
-  height: 100%;
-  border: 2px solid #f16a32;
-  position: absolute;
-  top: -2px;
-  left: 0;
-  z-index: 100;
-  animation: identifier 1s ease-in-out infinite;
-  transform-origin: center;
-}
-@keyframes identifier {
-  0% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.03);
-  }
-  100% {
-    transform: scale(1);
-  }
-}
 </style>
