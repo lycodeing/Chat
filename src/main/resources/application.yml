@@ -1,3 +1,5 @@
+server:
+  port: 9999
 spring:
   application:
     name: chat
@@ -31,7 +33,7 @@ mybatis-plus:
 
 netty:
   # 端口
-  port: 9000
+  port: 8888
   # 最大内容长度
   maxContentLength: 65536
   # websocket路径
@@ -44,3 +46,4 @@ security:
     - /chat/register
     - /chat/logout
     - /chat/heartbeat
+

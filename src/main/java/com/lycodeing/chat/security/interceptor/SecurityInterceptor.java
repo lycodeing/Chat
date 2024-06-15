@@ -36,6 +36,9 @@ public class SecurityInterceptor implements HandlerInterceptor {
                                TokenService tokenService) {
         this.securityProperties = securityProperties;
         this.tokenService = tokenService;
+
+        //打印当前被发行的接口地址
+        securityProperties.getWhiteList().forEach(url -> log.info("白名单:{}", url));
     }
 
     @Override
