@@ -3,6 +3,7 @@ package com.lycodeing.chat.config;
 import com.lycodeing.chat.handler.NettyAuthHandler;
 import com.lycodeing.chat.handler.NettyHeartBeatHandler;
 import com.lycodeing.chat.handler.NettyWebSocketHandler;
+import com.lycodeing.chat.security.TokenService;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -14,8 +15,8 @@ import io.netty.handler.codec.http.websocketx.WebSocketServerProtocolHandler;
 import io.netty.handler.timeout.IdleStateHandler;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
 
 /**
@@ -39,6 +40,13 @@ public class NettyServer {
     @Value("${netty.idleTimeout}")
     private Integer idleTimeout;
 
+    private final TokenService tokenService;
+
+    @Autowired
+    public NettyServer(TokenService tokenService) {
+        this.tokenService = tokenService;
+    }
+
     public void start() {
         EventLoopGroup bossGroup = new NioEventLoopGroup();
         EventLoopGroup workerGroup = new NioEventLoopGroup();
@@ -52,7 +60,7 @@ public class NettyServer {
                             ChannelPipeline pipeline = ch.pipeline();
                             pipeline.addLast(new HttpServerCodec());
                             pipeline.addLast(new HttpObjectAggregator(maxContentLength));
-                            pipeline.addLast(new NettyAuthHandler());
+                            pipeline.addLast(new NettyAuthHandler(tokenService));
                             // 心跳检查
                             pipeline.addLast(new IdleStateHandler(0, 0, idleTimeout)); // 读写空闲超时时间为5秒
                             pipeline.addLast(new NettyHeartBeatHandler());

@@ -7,6 +7,10 @@ import com.lycodeing.chat.domain.UserRelation;
 import com.lycodeing.chat.service.UserRelationService;
 import com.lycodeing.chat.mapper.UserRelationMapper;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
+
+import java.util.Collections;
+import java.util.List;
 
 /**
 * @author xiaotianyu
@@ -29,6 +33,15 @@ public class UserRelationServiceImpl extends ServiceImpl<UserRelationMapper, Use
                 .eq(UserRelation::getUserId, userId)
                 .eq(UserRelation::getToUserId, toUserId);
         return userRelationMapper.selectOne(wrapper);
+    }
+
+    @Override
+    public List<String> getFriendUserIds(String userId) {
+        LambdaQueryWrapper<UserRelation> wrapper = Wrappers.lambdaQuery(UserRelation.class)
+                .select(UserRelation::getToUserId)
+                .eq(UserRelation::getUserId, userId);
+        List<UserRelation> userRelations = userRelationMapper.selectList(wrapper);
+        return CollectionUtils.isEmpty(userRelations) ? Collections.emptyList() : userRelations.stream().map(UserRelation::getToUserId).toList();
     }
 }
 
