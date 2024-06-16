@@ -66,9 +66,10 @@ public class TokenService {
     public AuthenticatedUser getAuthenticatedUser(String token) {
         Claims claims = parserToken(token);
         String userId = claims.getSubject();
+        AuthenticatedUser authenticatedUser = redisUtil.get(AUTHENTICATED_USER_KEY + userId);
         // 更新有效期
-        redisUtil.set(AUTHENTICATED_USER_KEY + userId, getAuthenticatedUser(token), EXPIRATION_TIME);
-        return redisUtil.get(AUTHENTICATED_USER_KEY + userId);
+        redisUtil.set(AUTHENTICATED_USER_KEY + userId, authenticatedUser, EXPIRATION_TIME);
+        return authenticatedUser;
     }
 
     private Claims parserToken(String token) {

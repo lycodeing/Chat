@@ -35,9 +35,14 @@ public class NettyAuthHandler extends ChannelInboundHandlerAdapter {
                 log.info("authorization is null, channel close");
                 ctx.close();
             }
-            AuthenticatedUser authenticatedUser = validateJwtToken(authorization);
-            NettyServiceContext.addChannel(authenticatedUser.getUserId(), ctx.channel());
-            super.channelRead(ctx, msg);
+            try {
+                AuthenticatedUser authenticatedUser = validateJwtToken(authorization);
+                NettyServiceContext.addChannel(authenticatedUser.getUserId(), ctx.channel());
+                super.channelRead(ctx, msg);
+            } catch (Exception ex) {
+                log.error("authorization is invalid, channel close", ex);
+                ctx.close();
+            }
         } else {
             super.channelRead(ctx, msg);
         }
@@ -78,7 +83,7 @@ public class NettyAuthHandler extends ChannelInboundHandlerAdapter {
         String token = authorization.replace("Bearer ", "").trim();
 
         // 使用jwtTokenUtil验证token的合法性
-        if (tokenService.validateToken(token)) {
+        if (!tokenService.validateToken(token)) {
             throw new TokenValidationException("Token validation failed.");
         }
         return tokenService.getAuthenticatedUser(token);
