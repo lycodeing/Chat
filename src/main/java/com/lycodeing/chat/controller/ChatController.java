@@ -34,7 +34,7 @@ public class ChatController {
         chatService.sendPrivateMsg(privateMsgDTO);
     }
 
-
+    //test1 test2
     @PostMapping("/sendGroupMessage")
     public void sendGroupMessage(ChatMessageRequest chatMessage) {
         GroupMsgDTO groupMsgDTO = GroupMsgDTO.builder()
