@@ -1,5 +1,6 @@
 package com.lycodeing.chat.handler;
 
+import com.lycodeing.chat.constants.Constant;
 import com.lycodeing.chat.exceptions.TokenValidationException;
 import com.lycodeing.chat.security.AuthenticatedUser;
 import com.lycodeing.chat.security.AuthenticatedUserContext;
@@ -24,15 +25,6 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 public class NettyAuthHandler extends AbstractAuthHandler {
-    /**
-     * 令牌key
-     */
-    private static final String AUTHORIZATION_KEY = "Authorization";
-
-    /**
-     * websocket连接状态key
-     */
-    public static final String CONNECT_STATUS_KEY = "connect_status:";
 
 
     private final TokenService tokenService;
@@ -66,12 +58,12 @@ public class NettyAuthHandler extends AbstractAuthHandler {
 
     public void saveConnectStatus(String userId, ChannelHandlerContext ctx) {
         NettyServiceContext.addChannel(userId, ctx.channel());
-        redisUtil.set(CONNECT_STATUS_KEY + userId, true, 3600L);
+        redisUtil.set(Constant.CONNECT_STATUS_KEY + userId, true, 3600L);
     }
 
 
     public void closeConnect(String userId) {
-        redisUtil.delete(CONNECT_STATUS_KEY + userId);
+        redisUtil.delete(Constant.CONNECT_STATUS_KEY + userId);
         NettyServiceContext.removeChannel(userId);
     }
 
@@ -87,7 +79,7 @@ public class NettyAuthHandler extends AbstractAuthHandler {
         if (channel != null) {
             return true;
         }
-        Boolean connectStatus = redisUtil.get(CONNECT_STATUS_KEY + userId);
+        Boolean connectStatus = redisUtil.get(Constant.CONNECT_STATUS_KEY + userId);
         return connectStatus != null && connectStatus;
     }
 
@@ -95,7 +87,7 @@ public class NettyAuthHandler extends AbstractAuthHandler {
      * 读取AUTHORIZATION_KEY
      */
     public String getAuthorization(FullHttpRequest request) {
-        String authorization = request.headers().get(AUTHORIZATION_KEY);
+        String authorization = request.headers().get(Constant.AUTHORIZATION_KEY);
         if (authorization == null) {
             log.info("authorization is null");
             return null;
