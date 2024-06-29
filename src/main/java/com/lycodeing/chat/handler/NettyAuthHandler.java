@@ -1,13 +1,20 @@
 package com.lycodeing.chat.handler;
 
-import com.lycodeing.chat.config.NettyServiceContext;
 import com.lycodeing.chat.exceptions.TokenValidationException;
 import com.lycodeing.chat.security.AuthenticatedUser;
+import com.lycodeing.chat.security.AuthenticatedUserContext;
 import com.lycodeing.chat.security.TokenService;
+import com.lycodeing.chat.utils.RedisUtil;
+import com.lycodeing.netty.context.NettyServiceContext;
+import com.lycodeing.netty.exception.EndPipelineException;
+import com.lycodeing.netty.handlers.abs.AbstractAuthHandler;
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.http.FullHttpRequest;
+import io.netty.util.AttributeKey;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.stereotype.Component;
 
 /**
  * websocket连接认证处理
@@ -15,52 +22,87 @@ import lombok.extern.slf4j.Slf4j;
  * @author xiaotianyu
  */
 @Slf4j
-public class NettyAuthHandler extends ChannelInboundHandlerAdapter {
+@Component
+public class NettyAuthHandler extends AbstractAuthHandler {
     /**
      * 令牌key
      */
     private static final String AUTHORIZATION_KEY = "Authorization";
 
+    /**
+     * websocket连接状态key
+     */
+    public static final String CONNECT_STATUS_KEY = "connect_status:";
+
+
     private final TokenService tokenService;
 
-    public NettyAuthHandler(TokenService tokenService) {
+    private final RedisUtil<Boolean> redisUtil;
+
+    public NettyAuthHandler(TokenService tokenService,
+                            RedisUtil<Boolean> redisUtil) {
         this.tokenService = tokenService;
+        this.redisUtil = redisUtil;
     }
 
+
     @Override
-    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        if (msg instanceof FullHttpRequest request) {
-            String authorization = request.headers().get(AUTHORIZATION_KEY);
-            if (authorization == null) {
-                log.info("authorization is null, channel close");
-                ctx.close();
-            }
-            try {
-                AuthenticatedUser authenticatedUser = validateJwtToken(authorization);
-                NettyServiceContext.addChannel(authenticatedUser.getUserId(), ctx.channel());
-                super.channelRead(ctx, msg);
-            } catch (Exception ex) {
-                log.error("authorization is invalid, channel close", ex);
-                ctx.close();
-            }
-        } else {
-            super.channelRead(ctx, msg);
+    public void auth(ChannelHandlerContext ctx, FullHttpRequest request) {
+        String authorization = getAuthorization(request);
+        AuthenticatedUser authenticatedUser = validateJwtToken(authorization);
+        if (isConnected(authenticatedUser.getUserId())) {
+            throw new EndPipelineException("当前连接已存在，不允许创建多个连接");
         }
+        saveConnectStatus(authenticatedUser.getUserId(), ctx);
+
     }
 
     @Override
-    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-        ctx.close();
-        NettyServiceContext.removeChannel(ctx.channel());
-        log.info("channel inactive, channel close");
+    public void close(ChannelHandlerContext ctx) {
+        String userId = NettyServiceContext.getChannelKey(ctx.channel());
+        closeConnect(userId);
     }
 
-    @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        log.error("Exception caught: " + cause.getMessage(), cause);
-        ctx.close();
-        NettyServiceContext.removeChannel(ctx.channel());
+
+    public void saveConnectStatus(String userId, ChannelHandlerContext ctx) {
+        NettyServiceContext.addChannel(userId, ctx.channel());
+        redisUtil.set(CONNECT_STATUS_KEY + userId, true, 3600L);
     }
+
+
+    public void closeConnect(String userId) {
+        redisUtil.delete(CONNECT_STATUS_KEY + userId);
+        NettyServiceContext.removeChannel(userId);
+    }
+
+
+    /**
+     * 判断是否连接
+     *
+     * @param userId
+     * @return
+     */
+    public boolean isConnected(String userId) {
+        Channel channel = NettyServiceContext.getChannel(userId);
+        if (channel != null) {
+            return true;
+        }
+        Boolean connectStatus = redisUtil.get(CONNECT_STATUS_KEY + userId);
+        return connectStatus != null && connectStatus;
+    }
+
+    /**
+     * 读取AUTHORIZATION_KEY
+     */
+    public String getAuthorization(FullHttpRequest request) {
+        String authorization = request.headers().get(AUTHORIZATION_KEY);
+        if (authorization == null) {
+            log.info("authorization is null");
+            return null;
+        }
+        return authorization;
+    }
+
 
     /**
      * 验证JWT令牌
@@ -86,6 +128,8 @@ public class NettyAuthHandler extends ChannelInboundHandlerAdapter {
         if (!tokenService.validateToken(token)) {
             throw new TokenValidationException("Token validation failed.");
         }
-        return tokenService.getAuthenticatedUser(token);
+        AuthenticatedUser authenticatedUser = tokenService.getAuthenticatedUser(token);
+        AuthenticatedUserContext.set(authenticatedUser);
+        return authenticatedUser;
     }
 }

@@ -52,7 +52,6 @@ public class TokenService {
             parserToken(token);
             return true;
         } catch (Exception e) {
-            log.error("token解析失败", e);
             return false;
         }
     }
@@ -79,7 +78,6 @@ public class TokenService {
                     .parseClaimsJws(token)
                     .getBody();
         } catch (Exception e) {
-            log.error("token解析失败", e);
             throw new RuntimeException("token解析失败");
         }
     }

@@ -42,6 +42,7 @@ public class GroupMsgDTO {
      */
     private String groupId;
 
+    private String messageId;
 
     /**
      * 发送人
